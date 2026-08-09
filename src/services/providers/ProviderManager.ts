@@ -23,7 +23,9 @@ export class ProviderManager {
     const provider = this.providers.get(providerId);
 
     if (!provider) {
-      throw new Error(`Provider 不存在：${providerId}`);
+      throw new Error(
+        `服务商尚未接入真实 API：${providerId}。当前可执行生成的只有“模拟图片服务（测试用）”。`
+      );
     }
 
     return provider;

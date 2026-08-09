@@ -67,9 +67,17 @@ export function Generator() {
   const submit = async () => {
     const values = await form.validateFields();
     const unknownTokens = findUnknownPromptTokens(values.promptTemplate);
+    const provider = providers.find((item) => item.id === values.providerId);
 
     if (unknownTokens.length > 0) {
       message.error(`Prompt 存在未知变量：${unknownTokens.join(", ")}`);
+      return;
+    }
+
+    if (!provider?.enabled || !provider.browserCompatible || provider.id !== "mock") {
+      message.error(
+        "该服务商还没有接入真实浏览器直连 API。当前只能使用“模拟图片服务（测试用）”。"
+      );
       return;
     }
 
@@ -128,9 +136,22 @@ export function Generator() {
               style={{ width: 240 }}
             >
               <Select
+                onChange={(providerId) => {
+                  const provider = providers.find((item) => item.id === providerId);
+                  if (provider) {
+                    form.setFieldValue("model", provider.model);
+                  }
+                }}
                 options={providers.map((provider) => ({
-                  label: `${provider.name}${provider.browserCompatible ? "" : " · 待验证"}`,
-                  value: provider.id
+                  label:
+                    provider.id === "mock"
+                      ? provider.name
+                      : `${provider.name} · 尚未接入`,
+                  value: provider.id,
+                  disabled:
+                    provider.id !== "mock" ||
+                    !provider.enabled ||
+                    !provider.browserCompatible
                 }))}
               />
             </Form.Item>
@@ -220,6 +241,14 @@ export function Generator() {
               type="warning"
               message="当前是测试模式"
               description="模拟图片服务只会生成占位测试图，不会调用真实 AI 图片模型。要生成真实图片，需要接入支持浏览器 CORS 直连的真实 Provider。"
+            />
+          ) : null}
+          {watchedValues?.providerId && watchedValues.providerId !== "mock" ? (
+            <Alert
+              showIcon
+              type="error"
+              message="真实服务商尚未接入"
+              description="填写 API Key 只保存了配置，但代码里还需要实现对应 Provider 的请求地址、鉴权方式、响应解析和 CORS 验证。"
             />
           ) : null}
           <Button type="primary" size="large" icon={<Play size={17} />} onClick={submit}>
