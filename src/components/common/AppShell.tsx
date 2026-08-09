@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Alert, Badge, Button, Layout, Menu, Space, Typography } from "antd";
+import { Alert, Button, Layout, Menu, Space, Typography } from "antd";
 import {
   GalleryHorizontalEnd,
   Gauge,
@@ -49,6 +49,9 @@ export function AppShell() {
   const activeBatch = useAppStore((state) => state.activeBatch);
   const error = useAppStore((state) => state.error);
   const reload = useAppStore((state) => state.reload);
+  const percent = activeBatch?.totalImages
+    ? Math.round((activeBatch.completedImages / activeBatch.totalImages) * 100)
+    : 0;
 
   useEffect(() => {
     if (activeBatch?.status !== BatchStatus.RUNNING) {
@@ -84,16 +87,20 @@ export function AppShell() {
       <Layout>
         <Header className="app-header">
           <Space direction="vertical" size={0}>
-            <Typography.Text className="eyebrow">纯前端批量生成控制台</Typography.Text>
+            <Typography.Text className="eyebrow">本地落盘 · Vercel 代理 · 批量队列</Typography.Text>
             <Typography.Title level={3}>
               {activeBatch?.name ?? "准备创建新的批次"}
             </Typography.Title>
           </Space>
-          <Space>
-            <Badge
-              color={activeBatch ? "#32d5ff" : "#f6b443"}
-              text={getStatusLabel(activeBatch?.status ?? "idle")}
-            />
+          <Space className="status-strip">
+            <span className="status-pill">
+              <span className="status-dot" />
+              {getStatusLabel(activeBatch?.status ?? "idle")}
+            </span>
+            <span className="status-pill">
+              已完成 {activeBatch?.completedImages ?? 0}/{activeBatch?.totalImages ?? 0}
+            </span>
+            <span className="status-pill">进度 {percent}%</span>
             <Button type="primary" onClick={() => navigate("/generator")}>
               新建任务
             </Button>

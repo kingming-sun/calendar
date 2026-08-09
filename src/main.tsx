@@ -12,21 +12,27 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       theme={{
         algorithm: theme.darkAlgorithm,
         token: {
-          colorPrimary: "#32d5ff",
-          colorSuccess: "#41d681",
-          colorWarning: "#f6b443",
-          colorError: "#ff5f6d",
-          borderRadius: 14,
+          colorPrimary: "#4ee3ff",
+          colorSuccess: "#63e6a7",
+          colorWarning: "#f3b35b",
+          colorError: "#ff6678",
+          colorBgBase: "#081119",
+          colorTextBase: "#e9f7ff",
+          borderRadius: 16,
           fontFamily:
-            "Avenir Next, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
+            "Manrope, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif"
         },
         components: {
           Layout: {
-            bodyBg: "#101923",
-            siderBg: "rgba(12, 20, 29, 0.92)"
+            bodyBg: "#081119",
+            siderBg: "rgba(6, 13, 20, 0.86)"
           },
           Card: {
-            colorBgContainer: "rgba(20, 33, 45, 0.72)"
+            colorBgContainer: "rgba(13, 27, 39, 0.86)"
+          },
+          Table: {
+            colorBgContainer: "transparent",
+            headerBg: "rgba(233, 247, 255, 0.045)"
           }
         }
       }}

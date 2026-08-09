@@ -46,6 +46,8 @@ export function Dashboard() {
     10_000,
     conservativeSecondsPerImage
   );
+  const activeSlots = Math.min(activeBatch.processingImages, activeBatch.concurrency);
+  const railSlots = Array.from({ length: Math.min(activeBatch.concurrency, 10) });
 
   return (
     <div className="page-grid">
@@ -73,7 +75,7 @@ export function Dashboard() {
       <Card className="glass-card span-8">
         <Space direction="vertical" size="large" style={{ width: "100%" }}>
           <Space direction="vertical" size={2}>
-            <Typography.Text className="eyebrow">当前批次</Typography.Text>
+            <Typography.Text className="eyebrow">当前生产批次</Typography.Text>
             <Typography.Title level={2}>{activeBatch.name}</Typography.Title>
             <Typography.Text type="secondary">
               <span className="status-dot" />
@@ -82,16 +84,28 @@ export function Dashboard() {
             </Typography.Text>
           </Space>
           <Progress percent={Number(percent.toFixed(2))} strokeColor="#32d5ff" />
-          <Space size="large">
-            <Typography.Text>处理中：{activeBatch.processingImages}</Typography.Text>
-            <Typography.Text>剩余：{remaining}</Typography.Text>
-            <Typography.Text>
+          <div className="production-rail">
+            <Typography.Text className="eyebrow">Worker slots</Typography.Text>
+            <div className="rail-slots">
+              {railSlots.map((_, index) => (
+                <div
+                  key={index}
+                  className={`rail-slot ${index < activeSlots ? "active" : ""}`}
+                  title={`Slot ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="status-strip">
+            <span className="status-pill">处理中：{activeBatch.processingImages}</span>
+            <span className="status-pill">剩余：{remaining}</span>
+            <span className="status-pill">
               预计成本：{formatCurrency(activeBatch.estimatedCost ?? 0)}
-            </Typography.Text>
-            <Typography.Text>
+            </span>
+            <span className="status-pill">
               实际成本：{formatCurrency(activeBatch.actualCost ?? 0)}
-            </Typography.Text>
-          </Space>
+            </span>
+          </div>
         </Space>
       </Card>
 
