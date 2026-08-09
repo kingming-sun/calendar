@@ -130,7 +130,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const directory = get().selectedDirectory;
     if (!directory) {
       set({ error: "请先选择输出目录" });
-      return;
+      throw new Error("请先选择输出目录");
     }
 
     set({ loading: true, error: undefined });

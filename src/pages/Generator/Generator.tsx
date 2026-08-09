@@ -31,6 +31,7 @@ export function Generator() {
   const navigate = useNavigate();
   const { message } = App.useApp();
   const providers = useAppStore((state) => state.providers);
+  const selectedDirectory = useAppStore((state) => state.selectedDirectory);
   const directoryName = useAppStore((state) => state.directoryName);
   const selectDirectory = useAppStore((state) => state.selectDirectory);
   const createBatch = useAppStore((state) => state.createBatch);
@@ -78,6 +79,11 @@ export function Generator() {
       message.error(
         "该服务商还没有启用，或尚未通过浏览器 CORS 直连验证。"
       );
+      return;
+    }
+
+    if (!selectedDirectory) {
+      message.error("请先选择输出目录，再创建任务。");
       return;
     }
 
@@ -248,9 +254,20 @@ export function Generator() {
               description="当前会直接从浏览器调用 fal.ai。API Key 会保存在你的浏览器 IndexedDB 中，纯前端应用无法真正隐藏 Key。"
             />
           ) : null}
-          <Button type="primary" size="large" icon={<Play size={17} />} onClick={submit}>
+          <Button
+            type="primary"
+            size="large"
+            icon={<Play size={17} />}
+            disabled={!selectedDirectory}
+            onClick={submit}
+          >
             创建并启动
           </Button>
+          {!selectedDirectory ? (
+            <Typography.Text type="warning">
+              需要先选择输出目录，才会创建批次并开始生成。
+            </Typography.Text>
+          ) : null}
         </Space>
       </Card>
     </div>
