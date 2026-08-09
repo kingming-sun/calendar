@@ -99,7 +99,7 @@ export function BatchDetail() {
             showIcon
             type="warning"
             message="当前批次使用的是模拟图片服务"
-            description="这个批次不会调用 fal.ai，也不会产生 API Usage。要调用真实 API，请重新创建批次，并在生成器中选择“fal.ai FLUX”。"
+            description="这个批次不会调用 BFL，也不会产生 API Usage。要调用真实 API，请重新创建批次，并在生成器中选择“BFL FLUX”。"
           />
         ) : null}
         <Alert
@@ -107,7 +107,7 @@ export function BatchDetail() {
           showIcon
           type="info"
           message="速度说明"
-          description={`当前并发 ${activeBatch.concurrency}，所以会先同时跑 ${activeBatch.concurrency} 张，剩余任务等待空位。按 fal.ai 每张约 ${secondsPerImage} 秒估算，当前约 ${dailyImages.toLocaleString()} 张/天；目标 10,000 张/天至少需要并发 ${requiredConcurrency}。实际还会受账号限流和图片下载影响。`}
+          description={`当前并发 ${activeBatch.concurrency}，所以会先同时跑 ${activeBatch.concurrency} 张，剩余任务等待空位。按 BFL 每张约 ${secondsPerImage} 秒估算，当前约 ${dailyImages.toLocaleString()} 张/天；目标 10,000 张/天至少需要并发 ${requiredConcurrency}。实际还会受账号限流和图片下载影响。`}
         />
       </Card>
 

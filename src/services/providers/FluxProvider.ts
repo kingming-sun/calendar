@@ -5,19 +5,16 @@ import type {
   ProviderRuntimeConfig
 } from "@/types";
 
-interface FalImage {
-  url?: string;
-  content_type?: string;
-  width?: number;
-  height?: number;
+interface BflSubmitResponse {
+  requestId?: string;
+  pollingUrl?: string;
+  error?: string;
 }
 
-interface FalFluxResponse {
-  images?: FalImage[];
+interface BflResultResponse {
+  status?: string;
+  imageUrl?: string;
   seed?: number;
-  prompt?: string;
-  detail?: string | Array<{ msg?: string }>;
-  message?: string;
   error?: string;
 }
 
@@ -31,122 +28,108 @@ function getRetryAfterMs(response: Response): number | undefined {
   return Number.isFinite(seconds) ? seconds * 1000 : undefined;
 }
 
-function getFalErrorMessage(payload: FalFluxResponse): string {
-  const rawMessage =
-    typeof payload.detail === "string"
-      ? payload.detail
-      : payload.message ?? payload.error;
+function normalizeBflModel(model?: string): string {
+  const value = model?.trim() || "flux-dev";
 
-  if (rawMessage?.includes("Authentication is required")) {
-    return "fal.ai 认证失败或模型端点不可访问。请确认 API Key 有效，并且模型填写为 fal-ai/flux/dev。";
+  if (value === "fal-ai/flux/dev" || value === "fal-ai/flux" || value === "flux") {
+    return "flux-dev";
   }
 
-  if (typeof payload.detail === "string") {
-    return payload.detail;
-  }
-
-  if (Array.isArray(payload.detail)) {
-    return payload.detail.map((item) => item.msg).filter(Boolean).join("；");
-  }
-
-  return payload.message ?? payload.error ?? "fal.ai 请求失败";
-}
-
-function normalizeFalEndpoint(model?: string): string {
-  const endpoint = model?.trim() || "fal-ai/flux/dev";
-
-  if (endpoint === "fal-ai/flux") {
-    return "fal-ai/flux/dev";
-  }
-
-  return endpoint;
+  return value.replace(/^\/+/, "");
 }
 
 export class FluxProvider implements ImageProvider {
   id = "flux";
-  name = "fal.ai FLUX";
+  name = "BFL FLUX";
 
   async generate(
     request: ImageGenerationRequest,
     config: ProviderRuntimeConfig
   ): Promise<ImageGenerationResult> {
-    if (!config.apiKey) {
-      return {
-        success: false,
-        error: {
-          code: "FAL_API_KEY_MISSING",
-          message: "请先在设置页为 fal.ai FLUX 填写 API Key",
-          retryable: false
-        }
-      };
-    }
-
-    const apiKey = config.apiKey.trim();
-    if (!apiKey.includes(":")) {
-      return {
-        success: false,
-        error: {
-          code: "FAL_API_KEY_INCOMPLETE",
-          message:
-            "当前保存的 fal.ai API Key 看起来不是完整 Key。请在 fal.ai 新建 Key，并复制完整的 key_id:key_secret，而不是只复制 Key ID。",
-          retryable: false
-        }
-      };
-    }
-
-    const endpoint = normalizeFalEndpoint(config.model || request.model);
-    const response = await fetch(`https://fal.run/${endpoint}`, {
+    const submitResponse = await fetch("/api/bfl/submit", {
       method: "POST",
       headers: {
-        Authorization: `Key ${apiKey}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
         prompt: request.prompt,
-        image_size: {
-          width: request.width,
-          height: request.height
-        },
-        num_images: 1,
+        width: request.width,
+        height: request.height,
         seed: request.seed,
-        output_format: "jpeg",
-        enable_safety_checker: true
+        model: normalizeBflModel(config.model || request.model),
+        apiKey: config.apiKey
       })
     });
 
-    const payload = (await response.json().catch(() => ({}))) as FalFluxResponse;
+    const submitPayload = (await submitResponse.json().catch(() => ({}))) as BflSubmitResponse;
 
-    if (!response.ok) {
-      const retryable = [429, 500, 502, 503, 504].includes(response.status);
+    if (!submitResponse.ok || !submitPayload.pollingUrl) {
+      const retryable = [429, 500, 502, 503, 504].includes(submitResponse.status);
 
       return {
         success: false,
         error: {
-          code: `FAL_${response.status}`,
-          message: getFalErrorMessage(payload),
-          httpStatus: response.status,
+          code: `BFL_SUBMIT_${submitResponse.status}`,
+          message: submitPayload.error ?? "BFL 提交请求失败",
+          httpStatus: submitResponse.status,
           retryable,
-          retryAfterMs: getRetryAfterMs(response)
+          retryAfterMs: getRetryAfterMs(submitResponse)
         }
       };
     }
 
-    const imageUrl = payload.images?.[0]?.url;
-    if (!imageUrl) {
-      return {
-        success: false,
-        error: {
-          code: "FAL_EMPTY_IMAGE",
-          message: "fal.ai 响应中没有图片 URL",
-          retryable: true
-        }
-      };
+    const startedAt = Date.now();
+    const timeoutMs = 180_000;
+
+    while (Date.now() - startedAt < timeoutMs) {
+      await new Promise((resolve) => window.setTimeout(resolve, 1000));
+
+      const resultResponse = await fetch("/api/bfl/result", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          pollingUrl: submitPayload.pollingUrl,
+          apiKey: config.apiKey
+        })
+      });
+      const resultPayload = (await resultResponse.json().catch(
+        () => ({})
+      )) as BflResultResponse;
+
+      if (!resultResponse.ok) {
+        const retryable = [429, 500, 502, 503, 504].includes(resultResponse.status);
+
+        return {
+          success: false,
+          error: {
+            code: `BFL_RESULT_${resultResponse.status}`,
+            message: resultPayload.error ?? "BFL 轮询请求失败",
+            httpStatus: resultResponse.status,
+            retryable,
+            retryAfterMs: getRetryAfterMs(resultResponse)
+          }
+        };
+      }
+
+      if (resultPayload.imageUrl) {
+        return {
+          success: true,
+          imageUrl: resultPayload.imageUrl,
+          providerJobId: submitPayload.requestId,
+          cost: undefined
+        };
+      }
     }
 
     return {
-      success: true,
-      imageUrl,
-      providerJobId: payload.seed ? `fal_flux_${payload.seed}` : undefined
+      success: false,
+      error: {
+        code: "BFL_TIMEOUT",
+        message: "BFL 生成超时，请稍后重试或降低并发",
+        retryable: true
+      }
     };
   }
 }

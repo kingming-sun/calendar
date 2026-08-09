@@ -56,12 +56,12 @@ export async function seedInitialData(): Promise<void> {
       },
       {
         id: "flux",
-        name: "fal.ai FLUX",
-        model: "fal-ai/flux/dev",
+        name: "BFL FLUX",
+        model: "flux-dev",
         enabled: true,
         browserCompatible: true,
         pricing: {
-          pricePerImage: 0.003
+          pricePerImage: 0.025
         },
         updatedAt: now
       }
@@ -103,12 +103,14 @@ export async function seedInitialData(): Promise<void> {
     fluxProvider &&
     (fluxProvider.model === "flux-model-name" ||
       fluxProvider.model === "fal-ai/flux" ||
+      fluxProvider.model === "fal-ai/flux/dev" ||
       fluxProvider.name === "FLUX" ||
+      fluxProvider.name === "fal.ai FLUX" ||
       !fluxProvider.browserCompatible)
   ) {
     await db.providers.update("flux", {
-      name: "fal.ai FLUX",
-      model: "fal-ai/flux/dev",
+      name: "BFL FLUX",
+      model: "flux-dev",
       enabled: true,
       browserCompatible: true,
       updatedAt: now

@@ -55,9 +55,9 @@ export function Settings() {
                 </Space>
                 {provider.id === "flux" ? (
                   <Typography.Paragraph className="muted">
-                    fal.ai 需要粘贴完整 Key，通常格式为{" "}
-                    <Typography.Text code>key_id:key_secret</Typography.Text>。
-                    如果只复制了 Key ID，会返回 401 认证失败。
+                    BFL 官方 Key 通常以 <Typography.Text code>bfl_</Typography.Text>{" "}
+                    开头。部署到 Vercel 时更推荐把 Key 配置为环境变量{" "}
+                    <Typography.Text code>BFL_API_KEY</Typography.Text>，这样浏览器端不需要保存 Key。
                   </Typography.Paragraph>
                 ) : null}
                 <Space size="large" align="start">

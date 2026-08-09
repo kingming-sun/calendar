@@ -120,7 +120,7 @@ export function Dashboard() {
             当前并发：{activeBatch.concurrency}
           </Typography.Text>
           <Typography.Text>
-            按 fal.ai 每张约 {conservativeSecondsPerImage} 秒估算：约{" "}
+            按 BFL 每张约 {conservativeSecondsPerImage} 秒估算：约{" "}
             {estimatedDailyImages.toLocaleString()} 张/天
           </Typography.Text>
           <Typography.Text>
@@ -128,7 +128,7 @@ export function Dashboard() {
           </Typography.Text>
         </Space>
         <Typography.Paragraph className="muted" style={{ marginTop: 12 }}>
-          实际速度取决于 fal.ai 模型耗时、账号限流、浏览器连接数、图片下载速度和本地磁盘写入。
+          实际速度取决于 BFL 模型耗时、账号限流、Vercel 函数执行时间、图片下载速度和本地磁盘写入。
           如果页面显示未及时变化，系统会每 1.5 秒自动刷新运行中批次。
         </Typography.Paragraph>
       </Card>

@@ -250,8 +250,8 @@ export function Generator() {
             <Alert
               showIcon
               type="info"
-              message="真实 API 模式"
-              description="当前会直接从浏览器调用 fal.ai。模型请使用 fal-ai/flux/dev；API Key 会保存在你的浏览器 IndexedDB 中，纯前端应用无法真正隐藏 Key。"
+              message="BFL API 模式"
+              description="部署到 Vercel 后会通过 /api/bfl/generate 服务端代理调用 BFL。模型建议使用 flux-dev；生产环境推荐在 Vercel 设置 BFL_API_KEY 环境变量。"
             />
           ) : null}
           <Button
