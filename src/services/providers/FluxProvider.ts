@@ -81,11 +81,24 @@ export class FluxProvider implements ImageProvider {
       };
     }
 
+    const apiKey = config.apiKey.trim();
+    if (!apiKey.includes(":")) {
+      return {
+        success: false,
+        error: {
+          code: "FAL_API_KEY_INCOMPLETE",
+          message:
+            "当前保存的 fal.ai API Key 看起来不是完整 Key。请在 fal.ai 新建 Key，并复制完整的 key_id:key_secret，而不是只复制 Key ID。",
+          retryable: false
+        }
+      };
+    }
+
     const endpoint = normalizeFalEndpoint(config.model || request.model);
     const response = await fetch(`https://fal.run/${endpoint}`, {
       method: "POST",
       headers: {
-        Authorization: `Key ${config.apiKey}`,
+        Authorization: `Key ${apiKey}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({

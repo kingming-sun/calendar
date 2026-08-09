@@ -53,6 +53,13 @@ export function Settings() {
                     <Input.Password placeholder="仅保存在 IndexedDB，不导出" />
                   </Form.Item>
                 </Space>
+                {provider.id === "flux" ? (
+                  <Typography.Paragraph className="muted">
+                    fal.ai 需要粘贴完整 Key，通常格式为{" "}
+                    <Typography.Text code>key_id:key_secret</Typography.Text>。
+                    如果只复制了 Key ID，会返回 401 认证失败。
+                  </Typography.Paragraph>
+                ) : null}
                 <Space size="large" align="start">
                   <Form.Item name="pricePerImage" label="单张价格">
                     <InputNumber min={0} step={0.001} />
