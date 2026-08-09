@@ -74,9 +74,9 @@ export function Generator() {
       return;
     }
 
-    if (!provider?.enabled || !provider.browserCompatible || provider.id !== "mock") {
+    if (!provider?.enabled || !provider.browserCompatible) {
       message.error(
-        "该服务商还没有接入真实浏览器直连 API。当前只能使用“模拟图片服务（测试用）”。"
+        "该服务商还没有启用，或尚未通过浏览器 CORS 直连验证。"
       );
       return;
     }
@@ -146,12 +146,9 @@ export function Generator() {
                   label:
                     provider.id === "mock"
                       ? provider.name
-                      : `${provider.name} · 尚未接入`,
+                      : `${provider.name}${provider.browserCompatible ? "" : " · 尚未接入"}`,
                   value: provider.id,
-                  disabled:
-                    provider.id !== "mock" ||
-                    !provider.enabled ||
-                    !provider.browserCompatible
+                  disabled: !provider.enabled || !provider.browserCompatible
                 }))}
               />
             </Form.Item>
@@ -246,9 +243,9 @@ export function Generator() {
           {watchedValues?.providerId && watchedValues.providerId !== "mock" ? (
             <Alert
               showIcon
-              type="error"
-              message="真实服务商尚未接入"
-              description="填写 API Key 只保存了配置，但代码里还需要实现对应 Provider 的请求地址、鉴权方式、响应解析和 CORS 验证。"
+              type="info"
+              message="真实 API 模式"
+              description="当前会直接从浏览器调用 fal.ai。API Key 会保存在你的浏览器 IndexedDB 中，纯前端应用无法真正隐藏 Key。"
             />
           ) : null}
           <Button type="primary" size="large" icon={<Play size={17} />} onClick={submit}>

@@ -56,10 +56,10 @@ export async function seedInitialData(): Promise<void> {
       },
       {
         id: "flux",
-        name: "FLUX",
-        model: "flux-model-name",
-        enabled: false,
-        browserCompatible: false,
+        name: "fal.ai FLUX",
+        model: "fal-ai/flux/dev",
+        enabled: true,
+        browserCompatible: true,
         pricing: {
           pricePerImage: 0.003
         },
@@ -94,6 +94,22 @@ export async function seedInitialData(): Promise<void> {
       template:
         "一幅精致的{{subject}}，{{style}}，{{environment}}，艺术挂历插画，高细节，竖版构图，无文字，无水印。第 {{set_index}} 组，第 {{image_index}} 张。",
       negativePrompt: "文字，水印，低质量，模糊",
+      updatedAt: now
+    });
+  }
+
+  const fluxProvider = await db.providers.get("flux");
+  if (
+    fluxProvider &&
+    (fluxProvider.model === "flux-model-name" ||
+      fluxProvider.name === "FLUX" ||
+      !fluxProvider.browserCompatible)
+  ) {
+    await db.providers.update("flux", {
+      name: "fal.ai FLUX",
+      model: "fal-ai/flux/dev",
+      enabled: true,
+      browserCompatible: true,
       updatedAt: now
     });
   }

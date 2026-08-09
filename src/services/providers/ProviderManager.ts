@@ -4,12 +4,13 @@ import type {
   ImageProvider,
   ProviderRuntimeConfig
 } from "@/types";
+import { FluxProvider } from "./FluxProvider";
 import { MockProvider } from "./MockProvider";
 
 export class ProviderManager {
   private providers = new Map<string, ImageProvider>();
 
-  constructor(initialProviders: ImageProvider[] = [new MockProvider()]) {
+  constructor(initialProviders: ImageProvider[] = [new MockProvider(), new FluxProvider()]) {
     initialProviders.forEach((provider) => {
       this.providers.set(provider.id, provider);
     });

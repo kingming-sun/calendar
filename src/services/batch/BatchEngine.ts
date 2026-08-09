@@ -228,18 +228,32 @@ export class BatchEngine {
       });
       await this.recalculateProgress(job.batchId);
 
-      const result = await providerManager.generate(
-        job.providerId,
-        {
-          prompt: job.prompt,
-          negativePrompt: job.negativePrompt,
-          width: job.width,
-          height: job.height,
-          seed: job.seed,
-          model: job.model
-        },
-        this.toRuntimeConfig(provider)
-      );
+      const result = await providerManager
+        .generate(
+          job.providerId,
+          {
+            prompt: job.prompt,
+            negativePrompt: job.negativePrompt,
+            width: job.width,
+            height: job.height,
+            seed: job.seed,
+            model: job.model
+          },
+          this.toRuntimeConfig(provider)
+        )
+        .catch((error): ReturnType<typeof providerManager.generate> => {
+          return Promise.resolve({
+            success: false,
+            error: {
+              code: "PROVIDER_NETWORK_ERROR",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Provider 请求失败，可能是网络或 CORS 问题",
+              retryable: true
+            }
+          });
+        });
 
       if (result.success && (result.imageBlob || result.imageUrl)) {
         await db.jobs.update(job.id, {
@@ -247,7 +261,17 @@ export class BatchEngine {
           updatedAt: Date.now()
         });
 
-        const blob = result.imageBlob ?? (await this.fetchImageBlob(result.imageUrl));
+        let blob: Blob;
+        try {
+          blob = result.imageBlob ?? (await this.fetchImageBlob(result.imageUrl));
+        } catch (error) {
+          await this.failJob(job, {
+            code: "IMAGE_DOWNLOAD_FAILED",
+            message: error instanceof Error ? error.message : "图片下载失败",
+            retryable: true
+          });
+          return;
+        }
 
         await db.jobs.update(job.id, {
           status: JobStatus.SAVING,
@@ -263,7 +287,16 @@ export class BatchEngine {
           return;
         }
 
-        await fileSystemService.saveFile(setDirectory, filename, blob);
+        try {
+          await fileSystemService.saveFile(setDirectory, filename, blob);
+        } catch (error) {
+          await this.failJob(job, {
+            code: "FILE_SAVE_FAILED",
+            message: error instanceof Error ? error.message : "图片保存失败",
+            retryable: false
+          });
+          return;
+        }
         await this.markJobSuccess(job, result.cost ?? 0);
         return;
       }
