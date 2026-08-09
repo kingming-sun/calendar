@@ -92,9 +92,9 @@ export class BatchEngine {
           prompt: renderPrompt(input.promptTemplate, {
             setIndex,
             imageIndex,
-            subject: "calendar artwork",
-            style: "refined illustration",
-            environment: "studio light"
+            subject: "挂历主题插画",
+            style: "精致艺术插画风格",
+            environment: "柔和摄影棚光线"
           }),
           negativePrompt: input.negativePrompt,
           providerId: input.providerId,

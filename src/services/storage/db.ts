@@ -45,7 +45,7 @@ export async function seedInitialData(): Promise<void> {
     await db.providers.bulkPut([
       {
         id: "mock",
-        name: "模拟图片服务",
+        name: "模拟图片服务（测试用）",
         model: "mock-canvas-v1",
         enabled: true,
         browserCompatible: true,
@@ -81,9 +81,9 @@ export async function seedInitialData(): Promise<void> {
   }
 
   const mockProvider = await db.providers.get("mock");
-  if (mockProvider?.name === "MockProvider") {
+  if (mockProvider?.name === "MockProvider" || mockProvider?.name === "模拟图片服务") {
     await db.providers.update("mock", {
-      name: "模拟图片服务",
+      name: "模拟图片服务（测试用）",
       updatedAt: now
     });
   }

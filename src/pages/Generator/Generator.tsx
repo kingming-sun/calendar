@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import {
   App,
+  Alert,
   Button,
   Card,
   Form,
@@ -213,6 +214,14 @@ export function Generator() {
             实际可用并发取决于服务商 API 限流。模拟服务可用于先测试调度、
             重试和文件保存。
           </Typography.Paragraph>
+          {watchedValues?.providerId === "mock" ? (
+            <Alert
+              showIcon
+              type="warning"
+              message="当前是测试模式"
+              description="模拟图片服务只会生成占位测试图，不会调用真实 AI 图片模型。要生成真实图片，需要接入支持浏览器 CORS 直连的真实 Provider。"
+            />
+          ) : null}
           <Button type="primary" size="large" icon={<Play size={17} />} onClick={submit}>
             创建并启动
           </Button>

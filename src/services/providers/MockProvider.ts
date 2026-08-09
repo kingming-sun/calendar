@@ -9,6 +9,13 @@ function randomBetween(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function hashText(value: string): number {
+  return Array.from(value).reduce(
+    (hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0,
+    7
+  );
+}
+
 function createMockImageBlob(request: ImageGenerationRequest): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = request.width;
@@ -19,10 +26,12 @@ function createMockImageBlob(request: ImageGenerationRequest): Promise<Blob> {
     return Promise.reject(new Error("无法创建 Canvas 上下文"));
   }
 
+  const hash = hashText(`${request.prompt}_${request.seed ?? ""}`);
+  const hue = hash % 360;
   const gradient = context.createLinearGradient(0, 0, request.width, request.height);
-  gradient.addColorStop(0, "#101923");
-  gradient.addColorStop(0.45, "#17344a");
-  gradient.addColorStop(1, "#32d5ff");
+  gradient.addColorStop(0, `hsl(${hue}, 42%, 12%)`);
+  gradient.addColorStop(0.48, `hsl(${(hue + 28) % 360}, 48%, 24%)`);
+  gradient.addColorStop(1, `hsl(${(hue + 92) % 360}, 86%, 52%)`);
   context.fillStyle = gradient;
   context.fillRect(0, 0, request.width, request.height);
 
@@ -41,13 +50,14 @@ function createMockImageBlob(request: ImageGenerationRequest): Promise<Blob> {
 
   context.fillStyle = "#f6b443";
   context.font = `${Math.max(24, Math.floor(request.width / 18))}px sans-serif`;
-  context.fillText("AI 批量模拟图", 48, 96);
+  context.fillText("测试占位图", 48, 96);
 
   context.fillStyle = "rgba(255, 255, 255, 0.88)";
   context.font = `${Math.max(16, Math.floor(request.width / 38))}px sans-serif`;
   const prompt = request.prompt.slice(0, 90);
-  context.fillText(prompt, 48, 150);
-  context.fillText(`${request.width} x ${request.height}`, 48, 200);
+  context.fillText("模拟图片服务不会调用真实 AI", 48, 150);
+  context.fillText(prompt, 48, 200);
+  context.fillText(`${request.width} x ${request.height}`, 48, 250);
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
