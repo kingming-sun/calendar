@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Alert, Badge, Button, Layout, Menu, Space, Typography } from "antd";
 import {
@@ -9,6 +10,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { useAppStore } from "@/stores/appStore";
+import { BatchStatus } from "@/types";
 import { getStatusLabel } from "@/utils/statusLabel";
 
 const { Header, Sider, Content } = Layout;
@@ -46,6 +48,19 @@ export function AppShell() {
   const location = useLocation();
   const activeBatch = useAppStore((state) => state.activeBatch);
   const error = useAppStore((state) => state.error);
+  const reload = useAppStore((state) => state.reload);
+
+  useEffect(() => {
+    if (activeBatch?.status !== BatchStatus.RUNNING) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      void reload();
+    }, 1500);
+
+    return () => window.clearInterval(timer);
+  }, [activeBatch?.status, reload]);
 
   return (
     <Layout className="app-shell">

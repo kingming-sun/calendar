@@ -4,6 +4,10 @@ import { MetricCard } from "@/components/common/MetricCard";
 import { formatCurrency } from "@/services/cost/CostCalculator";
 import { useAppStore } from "@/stores/appStore";
 import { getStatusLabel } from "@/utils/statusLabel";
+import {
+  estimateDailyImages,
+  estimateRequiredConcurrency
+} from "@/utils/throughput";
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -33,6 +37,15 @@ export function Dashboard() {
     activeBatch.totalImages === 0
       ? 0
       : (activeBatch.completedImages / activeBatch.totalImages) * 100;
+  const conservativeSecondsPerImage = 30;
+  const estimatedDailyImages = estimateDailyImages(
+    activeBatch.concurrency,
+    conservativeSecondsPerImage
+  );
+  const requiredConcurrencyFor10k = estimateRequiredConcurrency(
+    10_000,
+    conservativeSecondsPerImage
+  );
 
   return (
     <div className="page-grid">
@@ -99,6 +112,25 @@ export function Dashboard() {
             }
           ]}
         />
+      </Card>
+
+      <Card className="glass-card span-12" title="产能估算">
+        <Space size="large" wrap>
+          <Typography.Text>
+            当前并发：{activeBatch.concurrency}
+          </Typography.Text>
+          <Typography.Text>
+            按 fal.ai 每张约 {conservativeSecondsPerImage} 秒估算：约{" "}
+            {estimatedDailyImages.toLocaleString()} 张/天
+          </Typography.Text>
+          <Typography.Text>
+            目标 10,000 张/天：至少需要并发 {requiredConcurrencyFor10k}
+          </Typography.Text>
+        </Space>
+        <Typography.Paragraph className="muted" style={{ marginTop: 12 }}>
+          实际速度取决于 fal.ai 模型耗时、账号限流、浏览器连接数、图片下载速度和本地磁盘写入。
+          如果页面显示未及时变化，系统会每 1.5 秒自动刷新运行中批次。
+        </Typography.Paragraph>
       </Card>
 
       <Card className="glass-card span-12" title="Set 快照">

@@ -1,9 +1,13 @@
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { Button, Card, Descriptions, Empty, Space, Table, Tag, Typography } from "antd";
+import { Alert, Button, Card, Descriptions, Empty, Space, Table, Tag, Typography } from "antd";
 import { useAppStore } from "@/stores/appStore";
 import { JobStatus, type ImageJob, type ImageSet } from "@/types";
 import { getStatusLabel } from "@/utils/statusLabel";
+import {
+  estimateDailyImages,
+  estimateRequiredConcurrency
+} from "@/utils/throughput";
 
 function getJobClass(status: JobStatus): string {
   if (status === JobStatus.SUCCESS) {
@@ -56,6 +60,10 @@ export function BatchDetail() {
     return <Empty description="批次不存在或尚未加载" />;
   }
 
+  const secondsPerImage = 30;
+  const dailyImages = estimateDailyImages(activeBatch.concurrency, secondsPerImage);
+  const requiredConcurrency = estimateRequiredConcurrency(10_000, secondsPerImage);
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card className="glass-card">
@@ -82,6 +90,13 @@ export function BatchDetail() {
             { key: "images", label: "图片数", children: activeBatch.totalImages },
             { key: "failed", label: "失败数", children: activeBatch.failedImages }
           ]}
+        />
+        <Alert
+          style={{ marginTop: 16 }}
+          showIcon
+          type="info"
+          message="速度说明"
+          description={`当前并发 ${activeBatch.concurrency}，所以会先同时跑 ${activeBatch.concurrency} 张，剩余任务等待空位。按 fal.ai 每张约 ${secondsPerImage} 秒估算，当前约 ${dailyImages.toLocaleString()} 张/天；目标 10,000 张/天至少需要并发 ${requiredConcurrency}。实际还会受账号限流和图片下载影响。`}
         />
       </Card>
 
