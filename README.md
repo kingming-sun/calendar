@@ -54,22 +54,24 @@ Output Directory: dist
 
 6. 点击 Deploy。
 
-### BFL 环境变量
+### AI Provider 环境变量
 
-如果使用 Black Forest Labs 官方 API，推荐在 Vercel 项目中配置环境变量：
+如果使用真实 AI Provider，推荐在 Vercel 项目中配置环境变量：
 
 ```text
 BFL_API_KEY=bfl_xxxxxxxxxxxxxxxxx
+GEMINI_API_KEY=AIza...
 ```
 
-应用会通过 Vercel Serverless Function 调用：
+应用会通过 Vercel Serverless Function 调用真实 Provider：
 
 ```text
 /api/bfl/submit
 /api/bfl/result
+/api/gemini/generate
 ```
 
-这样可以绕过浏览器 CORS 限制，也避免把 BFL Key 暴露在浏览器请求里。
+这样可以绕过浏览器 CORS 限制，也避免把 API Key 暴露在浏览器请求里。
 
 ### 前端路由
 
@@ -79,7 +81,7 @@ BFL_API_KEY=bfl_xxxxxxxxxxxxxxxxx
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
@@ -95,8 +97,9 @@ BFL_API_KEY=bfl_xxxxxxxxxxxxxxxxx
 - 图片仍写入访问者自己选择的本地目录。
 - File System Access API 需要 HTTPS 或 localhost，Vercel 默认提供 HTTPS，满足要求。
 - BFL 官方 API 通过 Vercel Serverless 代理调用，不需要浏览器 CORS 直连。
-- 如果没有配置 `BFL_API_KEY` 环境变量，应用会退回使用设置页保存的本地 Key。
-- 如果 BFL 账号余额不足或没有额度，任务会显示 BFL 返回的额度/支付错误。
+- Gemini API 通过 Vercel Serverless 代理调用，不需要浏览器 CORS 直连。
+- 如果没有配置 Provider 对应环境变量，应用会退回使用设置页保存的本地 Key。
+- 如果账号余额不足或没有额度，任务会显示 Provider 返回的额度/支付错误。
 
 ## 浏览器要求
 

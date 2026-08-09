@@ -40,32 +40,51 @@ export async function seedInitialData(): Promise<void> {
   const now = Date.now();
   const providerCount = await db.providers.count();
   const promptCount = await db.prompts.count();
+  const defaultProviders: ProviderConfig[] = [
+    {
+      id: "mock",
+      name: "模拟图片服务（测试用）",
+      model: "mock-canvas-v1",
+      enabled: true,
+      browserCompatible: true,
+      pricing: {
+        pricePerImage: 0
+      },
+      updatedAt: now
+    },
+    {
+      id: "flux",
+      name: "BFL FLUX",
+      model: "flux-dev",
+      enabled: true,
+      browserCompatible: true,
+      pricing: {
+        pricePerImage: 0.025
+      },
+      updatedAt: now
+    },
+    {
+      id: "gemini",
+      name: "Gemini Image",
+      model: "gemini-2.5-flash-image-preview",
+      enabled: true,
+      browserCompatible: true,
+      pricing: {
+        pricePerImage: 0.039
+      },
+      updatedAt: now
+    }
+  ];
 
   if (providerCount === 0) {
-    await db.providers.bulkPut([
-      {
-        id: "mock",
-        name: "模拟图片服务（测试用）",
-        model: "mock-canvas-v1",
-        enabled: true,
-        browserCompatible: true,
-        pricing: {
-          pricePerImage: 0
-        },
-        updatedAt: now
-      },
-      {
-        id: "flux",
-        name: "BFL FLUX",
-        model: "flux-dev",
-        enabled: true,
-        browserCompatible: true,
-        pricing: {
-          pricePerImage: 0.025
-        },
-        updatedAt: now
+    await db.providers.bulkPut(defaultProviders);
+  } else {
+    for (const provider of defaultProviders) {
+      const existingProvider = await db.providers.get(provider.id);
+      if (!existingProvider) {
+        await db.providers.put(provider);
       }
-    ]);
+    }
   }
 
   if (promptCount === 0) {

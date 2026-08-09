@@ -60,6 +60,14 @@ export function Settings() {
                     <Typography.Text code>BFL_API_KEY</Typography.Text>，这样浏览器端不需要保存 Key。
                   </Typography.Paragraph>
                 ) : null}
+                {provider.id === "gemini" ? (
+                  <Typography.Paragraph className="muted">
+                    Gemini 图片模型建议使用{" "}
+                    <Typography.Text code>gemini-2.5-flash-image-preview</Typography.Text>。
+                    部署到 Vercel 时推荐配置环境变量{" "}
+                    <Typography.Text code>GEMINI_API_KEY</Typography.Text>。
+                  </Typography.Paragraph>
+                ) : null}
                 <Space size="large" align="start">
                   <Form.Item name="pricePerImage" label="单张价格">
                     <InputNumber min={0} step={0.001} />
