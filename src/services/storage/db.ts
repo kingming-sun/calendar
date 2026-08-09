@@ -102,6 +102,7 @@ export async function seedInitialData(): Promise<void> {
   if (
     fluxProvider &&
     (fluxProvider.model === "flux-model-name" ||
+      fluxProvider.model === "fal-ai/flux" ||
       fluxProvider.name === "FLUX" ||
       !fluxProvider.browserCompatible)
   ) {

@@ -86,11 +86,22 @@ export function BatchDetail() {
           column={4}
           items={[
             { key: "status", label: "状态", children: getStatusLabel(activeBatch.status) },
+            { key: "provider", label: "服务商", children: activeBatch.providerId },
+            { key: "model", label: "模型", children: activeBatch.model },
             { key: "sets", label: "分组数", children: activeBatch.setCount },
             { key: "images", label: "图片数", children: activeBatch.totalImages },
             { key: "failed", label: "失败数", children: activeBatch.failedImages }
           ]}
         />
+        {activeBatch.providerId === "mock" ? (
+          <Alert
+            style={{ marginTop: 16 }}
+            showIcon
+            type="warning"
+            message="当前批次使用的是模拟图片服务"
+            description="这个批次不会调用 fal.ai，也不会产生 API Usage。要调用真实 API，请重新创建批次，并在生成器中选择“fal.ai FLUX”。"
+          />
+        ) : null}
         <Alert
           style={{ marginTop: 16 }}
           showIcon

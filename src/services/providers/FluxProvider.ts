@@ -32,6 +32,15 @@ function getRetryAfterMs(response: Response): number | undefined {
 }
 
 function getFalErrorMessage(payload: FalFluxResponse): string {
+  const rawMessage =
+    typeof payload.detail === "string"
+      ? payload.detail
+      : payload.message ?? payload.error;
+
+  if (rawMessage?.includes("Authentication is required")) {
+    return "fal.ai 认证失败或模型端点不可访问。请确认 API Key 有效，并且模型填写为 fal-ai/flux/dev。";
+  }
+
   if (typeof payload.detail === "string") {
     return payload.detail;
   }
@@ -41,6 +50,16 @@ function getFalErrorMessage(payload: FalFluxResponse): string {
   }
 
   return payload.message ?? payload.error ?? "fal.ai 请求失败";
+}
+
+function normalizeFalEndpoint(model?: string): string {
+  const endpoint = model?.trim() || "fal-ai/flux/dev";
+
+  if (endpoint === "fal-ai/flux") {
+    return "fal-ai/flux/dev";
+  }
+
+  return endpoint;
 }
 
 export class FluxProvider implements ImageProvider {
@@ -62,7 +81,7 @@ export class FluxProvider implements ImageProvider {
       };
     }
 
-    const endpoint = config.model || request.model || "fal-ai/flux/dev";
+    const endpoint = normalizeFalEndpoint(config.model || request.model);
     const response = await fetch(`https://fal.run/${endpoint}`, {
       method: "POST",
       headers: {
