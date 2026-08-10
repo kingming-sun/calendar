@@ -1,9 +1,20 @@
-const DEFAULT_MODEL = "gemini-2.0-flash-exp-image-generation";
+const DEFAULT_MODEL = "auto";
+const LEGACY_IMAGE_MODELS = new Set([
+  "gemini-2.5-flash-image-preview",
+  "gemini-2.0-flash-exp-image-generation"
+]);
+const PREFERRED_IMAGE_MODELS = [
+  "gemini-3.1-flash-image",
+  "gemini-3.1-flash-image-preview",
+  "gemini-3-pro-image-preview",
+  "gemini-2.0-flash-preview-image-generation",
+  "gemini-2.0-flash-exp-image-generation"
+];
 
 function normalizeModel(model) {
   const value = String(model || DEFAULT_MODEL).trim().replace(/^\/+/, "");
 
-  if (value === "gemini-2.5-flash-image-preview") {
+  if (!value || LEGACY_IMAGE_MODELS.has(value)) {
     return DEFAULT_MODEL;
   }
 
@@ -40,6 +51,100 @@ function findImagePart(payload) {
   return parts.find((part) => part.inlineData?.data || part.inline_data?.data);
 }
 
+async function listGeminiModels(apiKey) {
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
+    headers: {
+      "x-goog-api-key": apiKey
+    }
+  });
+  const payload = await readJson(response);
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      payload,
+      models: []
+    };
+  }
+
+  return {
+    ok: true,
+    payload,
+    models: payload.models || []
+  };
+}
+
+function getModelId(model) {
+  return String(model?.name || "").replace(/^models\//, "");
+}
+
+function supportsGenerateContent(model) {
+  return (model?.supportedGenerationMethods || []).includes("generateContent");
+}
+
+function isImageModel(model) {
+  const id = getModelId(model);
+  return supportsGenerateContent(model) && id.includes("image");
+}
+
+function pickImageModel(models, requestedModel) {
+  const imageModels = models.filter(isImageModel);
+
+  if (requestedModel !== DEFAULT_MODEL) {
+    const requested = imageModels.find((model) => getModelId(model) === requestedModel);
+    if (requested) {
+      return getModelId(requested);
+    }
+  }
+
+  for (const preferredModel of PREFERRED_IMAGE_MODELS) {
+    const match = imageModels.find((model) => getModelId(model) === preferredModel);
+    if (match) {
+      return getModelId(match);
+    }
+  }
+
+  return getModelId(imageModels[0]);
+}
+
+function buildGenerateBody(prompt) {
+  return {
+    contents: [
+      {
+        parts: [
+          {
+            text: prompt
+          }
+        ]
+      }
+    ],
+    generationConfig: {
+      responseModalities: ["TEXT", "IMAGE"]
+    }
+  };
+}
+
+async function generateWithModel(model, apiKey, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+    model
+  )}:generateContent`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": apiKey
+    },
+    body: JSON.stringify(buildGenerateBody(prompt))
+  });
+
+  return {
+    response,
+    payload: await readJson(response)
+  };
+}
+
 export default async function handler(request, response) {
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
@@ -60,39 +165,46 @@ export default async function handler(request, response) {
     return;
   }
 
-  const model = normalizeModel(body.model);
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-    model
-  )}:generateContent`;
+  const requestedModel = normalizeModel(body.model);
 
   try {
-    const geminiResponse = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: String(body.prompt || "")
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          responseModalities: ["TEXT", "IMAGE"]
+    const modelList = await listGeminiModels(apiKey);
+    if (!modelList.ok) {
+      response.status(modelList.status || 502).json({
+        error: `无法获取 Gemini 可用模型列表：${getErrorMessage(modelList.payload)}`,
+        detail: modelList.payload
+      });
+      return;
+    }
+
+    const model = pickImageModel(modelList.models, requestedModel);
+    if (!model) {
+      response.status(400).json({
+        error:
+          "当前 Gemini API Key 没有可用于图片生成的 generateContent 模型。请在 AI Studio 确认项目是否开放 Gemini 图片模型，或改用 Replicate/BFL。",
+        detail: {
+          availableGenerateContentModels: modelList.models
+            .filter(supportsGenerateContent)
+            .map(getModelId)
         }
-      })
-    });
-    const payload = await readJson(geminiResponse);
+      });
+      return;
+    }
+
+    const { response: geminiResponse, payload } = await generateWithModel(
+      model,
+      apiKey,
+      String(body.prompt || "")
+    );
 
     if (!geminiResponse.ok) {
       response.status(geminiResponse.status).json({
         error: getErrorMessage(payload),
-        detail: payload
+        detail: {
+          requestedModel,
+          selectedModel: model,
+          response: payload
+        }
       });
       return;
     }

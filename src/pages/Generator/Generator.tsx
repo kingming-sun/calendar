@@ -259,7 +259,7 @@ export function Generator() {
               showIcon
               type="info"
               message="Gemini API 模式"
-              description="部署到 Vercel 后会通过 /api/gemini/generate 服务端代理调用 Gemini。图片模型建议使用 gemini-2.0-flash-exp-image-generation；生产环境推荐在 Vercel 设置 GEMINI_API_KEY 环境变量。"
+              description="部署到 Vercel 后会通过 /api/gemini/generate 服务端代理调用 Gemini。模型建议填 auto，服务端会先拉取当前 API Key 可用模型并自动选择图片模型；生产环境推荐在 Vercel 设置 GEMINI_API_KEY 环境变量。"
             />
           ) : null}
           {watchedValues?.providerId === "replicate" ? (

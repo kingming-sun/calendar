@@ -26,10 +26,13 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
 }
 
 function normalizeGeminiModel(model?: string): string {
-  const value = (model || "gemini-2.0-flash-exp-image-generation").trim().replace(/^\/+/, "");
+  const value = (model || "auto").trim().replace(/^\/+/, "");
 
-  if (value === "gemini-2.5-flash-image-preview") {
-    return "gemini-2.0-flash-exp-image-generation";
+  if (
+    value === "gemini-2.5-flash-image-preview" ||
+    value === "gemini-2.0-flash-exp-image-generation"
+  ) {
+    return "auto";
   }
 
   return value;

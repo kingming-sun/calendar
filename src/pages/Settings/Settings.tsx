@@ -62,8 +62,8 @@ export function Settings() {
                 ) : null}
                 {provider.id === "gemini" ? (
                   <Typography.Paragraph className="muted">
-                    Gemini 图片模型建议使用{" "}
-                    <Typography.Text code>gemini-2.0-flash-exp-image-generation</Typography.Text>。
+                    Gemini 图片模型建议使用 <Typography.Text code>auto</Typography.Text>
+                    ，应用会先调用 ModelService.ListModels，然后选择当前 API Key 可用的图片模型。
                     部署到 Vercel 时推荐配置环境变量{" "}
                     <Typography.Text code>GEMINI_API_KEY</Typography.Text>。
                   </Typography.Paragraph>
