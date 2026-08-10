@@ -246,12 +246,28 @@ export function Generator() {
               description="模拟图片服务只会生成占位测试图，不会调用真实 AI 图片模型。要生成真实图片，需要接入支持浏览器 CORS 直连的真实 Provider。"
             />
           ) : null}
-          {watchedValues?.providerId && watchedValues.providerId !== "mock" ? (
+          {watchedValues?.providerId === "flux" ? (
             <Alert
               showIcon
               type="info"
               message="BFL API 模式"
-              description="部署到 Vercel 后会通过 /api/bfl/generate 服务端代理调用 BFL。模型建议使用 flux-dev；生产环境推荐在 Vercel 设置 BFL_API_KEY 环境变量。"
+              description="部署到 Vercel 后会通过 /api/bfl/submit 和 /api/bfl/result 服务端代理调用 BFL。模型建议使用 flux-dev；生产环境推荐在 Vercel 设置 BFL_API_KEY 环境变量。"
+            />
+          ) : null}
+          {watchedValues?.providerId === "gemini" ? (
+            <Alert
+              showIcon
+              type="info"
+              message="Gemini API 模式"
+              description="部署到 Vercel 后会通过 /api/gemini/generate 服务端代理调用 Gemini。图片模型建议使用 gemini-2.0-flash-exp-image-generation；生产环境推荐在 Vercel 设置 GEMINI_API_KEY 环境变量。"
+            />
+          ) : null}
+          {watchedValues?.providerId === "replicate" ? (
+            <Alert
+              showIcon
+              type="info"
+              message="Replicate API 模式"
+              description="部署到 Vercel 后会通过 /api/replicate/generate 服务端代理调用 Replicate。默认模型是 black-forest-labs/flux-schnell；生产环境推荐在 Vercel 设置 REPLICATE_API_TOKEN 环境变量。"
             />
           ) : null}
           <Button

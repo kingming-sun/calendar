@@ -68,6 +68,15 @@ export function Settings() {
                     <Typography.Text code>GEMINI_API_KEY</Typography.Text>。
                   </Typography.Paragraph>
                 ) : null}
+                {provider.id === "replicate" ? (
+                  <Typography.Paragraph className="muted">
+                    Replicate Token 通常以 <Typography.Text code>r8_</Typography.Text>{" "}
+                    开头。默认模型是{" "}
+                    <Typography.Text code>black-forest-labs/flux-schnell</Typography.Text>；
+                    部署到 Vercel 时推荐配置环境变量{" "}
+                    <Typography.Text code>REPLICATE_API_TOKEN</Typography.Text>。
+                  </Typography.Paragraph>
+                ) : null}
                 <Space size="large" align="start">
                   <Form.Item name="pricePerImage" label="单张价格">
                     <InputNumber min={0} step={0.001} />

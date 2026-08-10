@@ -73,6 +73,17 @@ export async function seedInitialData(): Promise<void> {
         pricePerImage: 0.039
       },
       updatedAt: now
+    },
+    {
+      id: "replicate",
+      name: "Replicate",
+      model: "black-forest-labs/flux-schnell",
+      enabled: true,
+      browserCompatible: true,
+      pricing: {
+        pricePerImage: 0.003
+      },
+      updatedAt: now
     }
   ];
 

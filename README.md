@@ -61,6 +61,7 @@ Output Directory: dist
 ```text
 BFL_API_KEY=bfl_xxxxxxxxxxxxxxxxx
 GEMINI_API_KEY=AIza...
+REPLICATE_API_TOKEN=r8_xxxxxxxxxxxxxxxxx
 ```
 
 应用会通过 Vercel Serverless Function 调用真实 Provider：
@@ -69,6 +70,7 @@ GEMINI_API_KEY=AIza...
 /api/bfl/submit
 /api/bfl/result
 /api/gemini/generate
+/api/replicate/generate
 ```
 
 这样可以绕过浏览器 CORS 限制，也避免把 API Key 暴露在浏览器请求里。
@@ -98,6 +100,7 @@ GEMINI_API_KEY=AIza...
 - File System Access API 需要 HTTPS 或 localhost，Vercel 默认提供 HTTPS，满足要求。
 - BFL 官方 API 通过 Vercel Serverless 代理调用，不需要浏览器 CORS 直连。
 - Gemini API 通过 Vercel Serverless 代理调用，不需要浏览器 CORS 直连。
+- Replicate API 通过 Vercel Serverless 代理调用，默认模型为 `black-forest-labs/flux-schnell`。
 - 如果没有配置 Provider 对应环境变量，应用会退回使用设置页保存的本地 Key。
 - 如果账号余额不足或没有额度，任务会显示 Provider 返回的额度/支付错误。
 

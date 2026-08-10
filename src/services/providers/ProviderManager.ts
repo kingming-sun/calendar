@@ -7,6 +7,7 @@ import type {
 import { FluxProvider } from "./FluxProvider";
 import { GeminiProvider } from "./GeminiProvider";
 import { MockProvider } from "./MockProvider";
+import { ReplicateProvider } from "./ReplicateProvider";
 
 export class ProviderManager {
   private providers = new Map<string, ImageProvider>();
@@ -15,7 +16,8 @@ export class ProviderManager {
     initialProviders: ImageProvider[] = [
       new MockProvider(),
       new FluxProvider(),
-      new GeminiProvider()
+      new GeminiProvider(),
+      new ReplicateProvider()
     ]
   ) {
     initialProviders.forEach((provider) => {
