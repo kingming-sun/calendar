@@ -167,6 +167,30 @@ export const useAppStore = create<AppState>((set, get) => ({
         status: BatchStatus.RUNNING,
         updatedAt: Date.now()
       });
+
+      const hasPendingJobs = get().jobs.some((job) => job.status === JobStatus.PENDING);
+      if (!batchEngine.isRunning(batch.id) && hasPendingJobs) {
+        const directory = get().selectedDirectory;
+        if (!directory) {
+          set({ error: "请先选择输出目录" });
+          await get().reload();
+          return;
+        }
+
+        set({ loading: true, error: undefined });
+        batchEngine
+          .startBatch(batch.id, directory)
+          .catch((error) => {
+            set({
+              error: error instanceof Error ? error.message : "Batch 执行失败"
+            });
+          })
+          .finally(async () => {
+            await get().reload();
+            set({ loading: false });
+          });
+      }
+
       await get().reload();
     }
   },

@@ -29,6 +29,15 @@ import { retryManager } from "./RetryManager";
 
 export class BatchEngine {
   private scheduler?: JobScheduler;
+  private runningBatchId?: string;
+
+  isRunning(batchId?: string): boolean {
+    if (!this.runningBatchId) {
+      return false;
+    }
+
+    return batchId ? this.runningBatchId === batchId : true;
+  }
 
   async createBatch(input: BatchCreateInput): Promise<Batch> {
     const now = Date.now();
@@ -132,6 +141,11 @@ export class BatchEngine {
     batchId: string,
     directoryHandle: FileSystemDirectoryHandle
   ): Promise<void> {
+    if (this.isRunning(batchId)) {
+      this.scheduler?.resume();
+      return;
+    }
+
     const batch = await db.batches.get(batchId);
     if (!batch) {
       throw new Error("Batch 不存在");
@@ -163,8 +177,17 @@ export class BatchEngine {
       this.runJob(job, directoryHandle)
     );
 
-    await this.scheduler.run(jobs);
-    await this.finalizeBatch(batchId);
+    this.runningBatchId = batchId;
+
+    try {
+      await this.scheduler.run(jobs);
+      await this.finalizeBatch(batchId);
+    } finally {
+      if (this.runningBatchId === batchId) {
+        this.runningBatchId = undefined;
+        this.scheduler = undefined;
+      }
+    }
   }
 
   pause(): void {
@@ -177,6 +200,7 @@ export class BatchEngine {
 
   cancel(): void {
     this.scheduler?.cancel();
+    this.runningBatchId = undefined;
   }
 
   async retryFailed(batchId: string): Promise<void> {
