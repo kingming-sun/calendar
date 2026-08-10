@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Alert, Button, Card, Descriptions, Empty, Space, Table, Tag, Typography } from "antd";
 import { useAppStore } from "@/stores/appStore";
-import { JobStatus, type ImageJob, type ImageSet } from "@/types";
+import { BatchStatus, JobStatus, type ImageJob, type ImageSet } from "@/types";
 import { getStatusLabel } from "@/utils/statusLabel";
 import {
   estimateDailyImages,
@@ -63,6 +63,15 @@ export function BatchDetail() {
   const secondsPerImage = 30;
   const dailyImages = estimateDailyImages(activeBatch.concurrency, secondsPerImage);
   const requiredConcurrency = estimateRequiredConcurrency(10_000, secondsPerImage);
+  const pendingJobs = jobs.filter((job) => job.status === JobStatus.PENDING).length;
+  const activeJobs = jobs.filter(
+    (job) =>
+      job.status === JobStatus.PROCESSING ||
+      job.status === JobStatus.DOWNLOADING ||
+      job.status === JobStatus.SAVING
+  ).length;
+  const isWaitingForScheduler =
+    activeBatch.status === BatchStatus.RUNNING && pendingJobs > 0 && activeJobs === 0;
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -109,6 +118,15 @@ export function BatchDetail() {
           message="速度说明"
           description={`当前并发 ${activeBatch.concurrency}，所以会先同时跑 ${activeBatch.concurrency} 张，剩余任务等待空位。按 BFL 每张约 ${secondsPerImage} 秒估算，当前约 ${dailyImages.toLocaleString()} 张/天；目标 10,000 张/天至少需要并发 ${requiredConcurrency}。实际还会受账号限流和图片下载影响。`}
         />
+        {isWaitingForScheduler ? (
+          <Alert
+            style={{ marginTop: 16 }}
+            showIcon
+            type="warning"
+            message="任务还没有开始生成"
+            description="当前批次是运行中，但任务仍停留在等待队列。通常是页面刷新或本地服务重启后调度器丢失导致；点击“继续”会重新读取等待中的任务并开始生成。"
+          />
+        ) : null}
       </Card>
 
       <Card className="glass-card" title="Set 列表">

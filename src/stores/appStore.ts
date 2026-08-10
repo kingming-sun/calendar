@@ -160,15 +160,24 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   async resumeBatch() {
-    batchEngine.resume();
     const batch = get().activeBatch;
     if (batch) {
+      if (batchEngine.isRunning(batch.id)) {
+        batchEngine.resume();
+      }
+
       await db.batches.update(batch.id, {
         status: BatchStatus.RUNNING,
         updatedAt: Date.now()
       });
 
-      const hasPendingJobs = get().jobs.some((job) => job.status === JobStatus.PENDING);
+      const pendingJobs = await db.jobs
+        .where("batchId")
+        .equals(batch.id)
+        .and((job) => job.status === JobStatus.PENDING)
+        .toArray();
+      const hasPendingJobs = pendingJobs.length > 0;
+
       if (!batchEngine.isRunning(batch.id) && hasPendingJobs) {
         const directory = get().selectedDirectory;
         if (!directory) {

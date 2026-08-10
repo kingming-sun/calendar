@@ -162,16 +162,10 @@ export class BatchEngine {
     });
 
     const jobs = await db.jobs
-      .where("[batchId+status]")
-      .equals([batchId, JobStatus.PENDING])
-      .toArray()
-      .catch(() =>
-        db.jobs
-          .where("batchId")
-          .equals(batchId)
-          .and((job) => job.status === JobStatus.PENDING)
-          .toArray()
-      );
+      .where("batchId")
+      .equals(batchId)
+      .and((job) => job.status === JobStatus.PENDING)
+      .toArray();
 
     this.scheduler = new JobScheduler(batch.concurrency, (job) =>
       this.runJob(job, directoryHandle)
