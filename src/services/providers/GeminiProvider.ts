@@ -39,6 +39,14 @@ function getRetryAfterMs(response: Response): number | undefined {
   return Number.isFinite(seconds) ? seconds * 1000 : undefined;
 }
 
+function getProxyErrorMessage(response: Response, fallback?: string): string {
+  if (response.status === 404 && !fallback) {
+    return "Gemini 代理接口不存在。当前如果只用 npm run dev 启动，本地不会运行 Vercel Serverless API；请部署到 Vercel，或使用 vercel dev 预览真实生成。";
+  }
+
+  return fallback ?? "Gemini 代理请求失败";
+}
+
 export class GeminiProvider implements ImageProvider {
   id = "gemini";
   name = "Gemini Image";
@@ -67,7 +75,7 @@ export class GeminiProvider implements ImageProvider {
         success: false,
         error: {
           code: `GEMINI_${response.status}`,
-          message: payload.error ?? "Gemini 代理请求失败",
+          message: getProxyErrorMessage(response, payload.error),
           httpStatus: response.status,
           retryable,
           retryAfterMs: getRetryAfterMs(response)
