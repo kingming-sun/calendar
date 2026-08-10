@@ -1,7 +1,13 @@
-const DEFAULT_MODEL = "gemini-2.5-flash-image-preview";
+const DEFAULT_MODEL = "gemini-2.0-flash-exp-image-generation";
 
 function normalizeModel(model) {
-  return String(model || DEFAULT_MODEL).trim().replace(/^\/+/, "");
+  const value = String(model || DEFAULT_MODEL).trim().replace(/^\/+/, "");
+
+  if (value === "gemini-2.5-flash-image-preview") {
+    return DEFAULT_MODEL;
+  }
+
+  return value;
 }
 
 function getErrorMessage(payload) {

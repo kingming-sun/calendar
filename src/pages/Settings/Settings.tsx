@@ -63,7 +63,7 @@ export function Settings() {
                 {provider.id === "gemini" ? (
                   <Typography.Paragraph className="muted">
                     Gemini 图片模型建议使用{" "}
-                    <Typography.Text code>gemini-2.5-flash-image-preview</Typography.Text>。
+                    <Typography.Text code>gemini-2.0-flash-exp-image-generation</Typography.Text>。
                     部署到 Vercel 时推荐配置环境变量{" "}
                     <Typography.Text code>GEMINI_API_KEY</Typography.Text>。
                   </Typography.Paragraph>

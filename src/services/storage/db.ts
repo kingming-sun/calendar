@@ -66,7 +66,7 @@ export async function seedInitialData(): Promise<void> {
     {
       id: "gemini",
       name: "Gemini Image",
-      model: "gemini-2.5-flash-image-preview",
+      model: "gemini-2.0-flash-exp-image-generation",
       enabled: true,
       browserCompatible: true,
       pricing: {
@@ -132,6 +132,14 @@ export async function seedInitialData(): Promise<void> {
       model: "flux-dev",
       enabled: true,
       browserCompatible: true,
+      updatedAt: now
+    });
+  }
+
+  const geminiProvider = await db.providers.get("gemini");
+  if (geminiProvider?.model === "gemini-2.5-flash-image-preview") {
+    await db.providers.update("gemini", {
+      model: "gemini-2.0-flash-exp-image-generation",
       updatedAt: now
     });
   }

@@ -26,7 +26,13 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
 }
 
 function normalizeGeminiModel(model?: string): string {
-  return (model || "gemini-2.5-flash-image-preview").trim().replace(/^\/+/, "");
+  const value = (model || "gemini-2.0-flash-exp-image-generation").trim().replace(/^\/+/, "");
+
+  if (value === "gemini-2.5-flash-image-preview") {
+    return "gemini-2.0-flash-exp-image-generation";
+  }
+
+  return value;
 }
 
 function getRetryAfterMs(response: Response): number | undefined {
