@@ -12,6 +12,20 @@ import {
   type ProviderConfig
 } from "@/types";
 
+const SELECTED_DIRECTORY_ID = "selected-output-directory";
+
+async function getStoredDirectory(batchId?: string): Promise<FileSystemDirectoryHandle | undefined> {
+  if (batchId) {
+    const batchHandle = await db.fileHandles.get(`batch:${batchId}`);
+    if (batchHandle?.handle) {
+      return batchHandle.handle;
+    }
+  }
+
+  const selectedHandle = await db.fileHandles.get(SELECTED_DIRECTORY_ID);
+  return selectedHandle?.handle;
+}
+
 interface AppState {
   initialized: boolean;
   selectedDirectory?: FileSystemDirectoryHandle;
@@ -50,8 +64,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: undefined });
     try {
       await seedInitialData();
+      const selectedDirectory = await getStoredDirectory();
       await get().reload();
-      set({ initialized: true });
+      set({
+        initialized: true,
+        selectedDirectory,
+        directoryName: selectedDirectory?.name
+      });
     } catch (error) {
       set({ error: error instanceof Error ? error.message : "初始化失败" });
     } finally {
@@ -60,6 +79,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   async selectDirectory(handle) {
+    await db.fileHandles.put({
+      id: SELECTED_DIRECTORY_ID,
+      handle,
+      updatedAt: Date.now()
+    });
+
     set({
       selectedDirectory: handle,
       directoryName: handle.name
@@ -127,11 +152,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   async startBatch(batchId) {
-    const directory = get().selectedDirectory;
+    const directory = get().selectedDirectory ?? (await getStoredDirectory(batchId));
     if (!directory) {
       set({ error: "请先选择输出目录" });
       throw new Error("请先选择输出目录");
     }
+
+    await db.fileHandles.put({
+      id: `batch:${batchId}`,
+      batchId,
+      handle: directory,
+      updatedAt: Date.now()
+    });
+    set({
+      selectedDirectory: directory,
+      directoryName: directory.name
+    });
 
     set({ loading: true, error: undefined });
     batchEngine
@@ -179,12 +215,23 @@ export const useAppStore = create<AppState>((set, get) => ({
       const hasPendingJobs = pendingJobs.length > 0;
 
       if (!batchEngine.isRunning(batch.id) && hasPendingJobs) {
-        const directory = get().selectedDirectory;
+        const directory = get().selectedDirectory ?? (await getStoredDirectory(batch.id));
         if (!directory) {
           set({ error: "请先选择输出目录" });
           await get().reload();
           return;
         }
+
+        await db.fileHandles.put({
+          id: `batch:${batch.id}`,
+          batchId: batch.id,
+          handle: directory,
+          updatedAt: Date.now()
+        });
+        set({
+          selectedDirectory: directory,
+          directoryName: directory.name
+        });
 
         set({ loading: true, error: undefined });
         batchEngine

@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { Alert, Button, Card, Descriptions, Empty, Space, Table, Tag, Typography } from "antd";
+import { Alert, App, Button, Card, Descriptions, Empty, Space, Table, Tag, Typography } from "antd";
 import { useAppStore } from "@/stores/appStore";
 import { BatchStatus, JobStatus, type ImageJob, type ImageSet } from "@/types";
+import { fileSystemService } from "@/services/filesystem/FileSystemService";
 import { getStatusLabel } from "@/utils/statusLabel";
 import {
   estimateDailyImages,
@@ -29,9 +30,12 @@ function getJobClass(status: JobStatus): string {
 
 export function BatchDetail() {
   const { batchId } = useParams();
+  const { message } = App.useApp();
   const activeBatch = useAppStore((state) => state.activeBatch);
   const sets = useAppStore((state) => state.sets);
   const jobs = useAppStore((state) => state.jobs);
+  const directoryName = useAppStore((state) => state.directoryName);
+  const selectDirectory = useAppStore((state) => state.selectDirectory);
   const pauseBatch = useAppStore((state) => state.pauseBatch);
   const resumeBatch = useAppStore((state) => state.resumeBatch);
   const cancelBatch = useAppStore((state) => state.cancelBatch);
@@ -73,6 +77,16 @@ export function BatchDetail() {
   const isWaitingForScheduler =
     activeBatch.status === BatchStatus.RUNNING && pendingJobs > 0 && activeJobs === 0;
 
+  const handleSelectDirectory = async () => {
+    try {
+      const handle = await fileSystemService.selectDirectory();
+      await selectDirectory(handle);
+      message.success(`已选择输出目录：${handle.name}`);
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : "选择目录失败");
+    }
+  };
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card className="glass-card">
@@ -82,6 +96,9 @@ export function BatchDetail() {
             <Typography.Title level={2}>{activeBatch.name}</Typography.Title>
           </Space>
           <Space>
+            <Button onClick={handleSelectDirectory}>
+              {directoryName ? `输出目录：${directoryName}` : "选择输出目录"}
+            </Button>
             <Button onClick={pauseBatch}>暂停</Button>
             <Button onClick={resumeBatch}>继续</Button>
             <Button onClick={() => retryFailed(activeBatch.id)}>重试失败项</Button>
