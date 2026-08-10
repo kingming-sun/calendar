@@ -73,8 +73,8 @@ export function AppShell() {
             <Sparkles size={24} />
           </div>
           <div>
-            <Typography.Title level={4}>AI 批量图片</Typography.Title>
-            <Typography.Text type="secondary">生成控制台</Typography.Text>
+            <Typography.Title level={4}>小明专用</Typography.Title>
+            <Typography.Text type="secondary">批量图片工厂</Typography.Text>
           </div>
         </div>
         <Menu

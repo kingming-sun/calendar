@@ -1,4 +1,4 @@
-# AI Batch Image Generator
+# 小明专用
 
 纯前端批量 AI 图片生成器，基于 `React + TypeScript + Vite + Zustand + Dexie + File System Access API`。
 

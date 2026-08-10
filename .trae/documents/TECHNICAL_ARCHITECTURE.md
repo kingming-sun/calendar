@@ -1,4 +1,4 @@
-# AI Batch Image Generator 技术架构文档
+# 小明专用 技术架构文档
 
 ## 1. 架构设计
 

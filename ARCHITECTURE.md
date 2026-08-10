@@ -1,4 +1,4 @@
-# AI Batch Image Generator — Frontend Architecture
+# 小明专用 — Frontend Architecture
 
 ## 1. 项目目标
 
