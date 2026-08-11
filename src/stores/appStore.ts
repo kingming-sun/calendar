@@ -272,7 +272,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   async retryFailed(batchId) {
     await batchEngine.retryFailed(batchId);
-    await get().reload();
+    await get().loadBatch(batchId);
+    await get().resumeBatch();
   },
 
   async saveProvider(provider) {

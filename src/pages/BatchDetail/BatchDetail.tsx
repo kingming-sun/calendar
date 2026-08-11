@@ -101,7 +101,7 @@ export function BatchDetail() {
             </Button>
             <Button onClick={pauseBatch}>暂停</Button>
             <Button onClick={resumeBatch}>继续</Button>
-            <Button onClick={() => retryFailed(activeBatch.id)}>重试失败项</Button>
+            <Button onClick={() => retryFailed(activeBatch.id)}>重试并继续</Button>
             <Button danger onClick={() => cancelBatch(activeBatch.id)}>
               取消
             </Button>
