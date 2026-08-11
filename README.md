@@ -71,6 +71,7 @@ REPLICATE_API_TOKEN=r8_xxxxxxxxxxxxxxxxx
 /api/bfl/result
 /api/gemini/generate
 /api/replicate/generate
+/api/image/fetch
 ```
 
 这样可以绕过浏览器 CORS 限制，也避免把 API Key 暴露在浏览器请求里。
@@ -101,6 +102,7 @@ REPLICATE_API_TOKEN=r8_xxxxxxxxxxxxxxxxx
 - BFL 官方 API 通过 Vercel Serverless 代理调用，不需要浏览器 CORS 直连。
 - Gemini API 通过 Vercel Serverless 代理调用，不需要浏览器 CORS 直连。
 - Replicate API 通过 Vercel Serverless 代理调用，默认模型为 `black-forest-labs/flux-schnell`。
+- 远程图片下载失败时会通过 `/api/image/fetch` 代理下载，避免浏览器 CORS 阻止保存图片。
 - 如果没有配置 Provider 对应环境变量，应用会退回使用设置页保存的本地 Key。
 - 如果账号余额不足或没有额度，任务会显示 Provider 返回的额度/支付错误。
 

@@ -360,12 +360,48 @@ export class BatchEngine {
       throw new Error("图片 URL 为空");
     }
 
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      throw new Error(`图片下载失败：${response.status}`);
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`图片下载失败：${response.status}`);
+      }
+
+      return response.blob();
+    } catch {
+      const proxyResponse = await fetch("/api/image/fetch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          imageUrl
+        })
+      });
+      const payload = (await proxyResponse.json().catch(() => ({}))) as {
+        imageBase64?: string;
+        mimeType?: string;
+        error?: string;
+      };
+
+      if (!proxyResponse.ok || !payload.imageBase64) {
+        throw new Error(payload.error ?? `图片代理下载失败：${proxyResponse.status}`);
+      }
+
+      return this.base64ToBlob(payload.imageBase64, payload.mimeType ?? "image/jpeg");
+    }
+  }
+
+  private base64ToBlob(base64: string, mimeType: string): Blob {
+    const binary = window.atob(base64);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
     }
 
-    return response.blob();
+    return new Blob([bytes], {
+      type: mimeType
+    });
   }
 
   private toRuntimeConfig(provider: ProviderConfig) {
