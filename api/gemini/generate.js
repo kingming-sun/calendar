@@ -51,12 +51,30 @@ function findImagePart(payload) {
   return parts.find((part) => part.inlineData?.data || part.inline_data?.data);
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = 90_000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function listGeminiModels(apiKey) {
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
-    headers: {
-      "x-goog-api-key": apiKey
-    }
-  });
+  const response = await fetchWithTimeout(
+    "https://generativelanguage.googleapis.com/v1beta/models",
+    {
+      headers: {
+        "x-goog-api-key": apiKey
+      }
+    },
+    15_000
+  );
   const payload = await readJson(response);
 
   if (!response.ok) {
@@ -130,14 +148,18 @@ async function generateWithModel(model, apiKey, prompt) {
     model
   )}:generateContent`;
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-goog-api-key": apiKey
+  const response = await fetchWithTimeout(
+    url,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey
+      },
+      body: JSON.stringify(buildGenerateBody(prompt))
     },
-    body: JSON.stringify(buildGenerateBody(prompt))
-  });
+    90_000
+  );
 
   return {
     response,
@@ -231,6 +253,14 @@ export default async function handler(request, response) {
       usageMetadata: payload.usageMetadata
     });
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      response.status(504).json({
+        error:
+          "Gemini 请求超时。请求已经发到 Google，但长时间没有返回；可能是模型排队、限流或网络不稳定，请稍后重试或降低并发。"
+      });
+      return;
+    }
+
     response.status(500).json({
       error: error instanceof Error ? error.message : "Gemini 代理请求失败"
     });
