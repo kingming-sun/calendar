@@ -38,13 +38,20 @@ export class BrowserFileSystemService {
     directory: FileSystemDirectoryHandle,
     filename: string,
     blob: Blob
-  ): Promise<void> {
+  ): Promise<File> {
     const fileHandle = await directory.getFileHandle(filename, {
       create: true
     });
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
+
+    const savedFile = await fileHandle.getFile();
+    if (savedFile.size <= 0) {
+      throw new Error("文件写入后为空");
+    }
+
+    return savedFile;
   }
 
   async fileExists(

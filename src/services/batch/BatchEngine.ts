@@ -336,6 +336,10 @@ export class BatchEngine {
 
         try {
           await fileSystemService.saveFile(setDirectory, filename, blob);
+          const saved = await fileSystemService.fileExists(setDirectory, filename);
+          if (!saved) {
+            throw new Error("文件写入后无法读回，请重新选择输出目录后重试");
+          }
         } catch (error) {
           await this.failJob(job, {
             code: "FILE_SAVE_FAILED",

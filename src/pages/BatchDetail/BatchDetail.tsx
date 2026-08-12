@@ -163,7 +163,12 @@ export function BatchDetail() {
                       <div
                         key={job.id}
                         className={`job-cell ${getJobClass(job.status)}`}
-                        title={job.error?.message}
+                        title={
+                          job.error?.message ??
+                          (job.status === JobStatus.SUCCESS
+                            ? `已保存：${job.localFilename}`
+                            : job.localFilename)
+                        }
                       >
                         {String(job.imageIndex).padStart(2, "0")}
                       </div>
