@@ -270,6 +270,14 @@ export function Generator() {
               description="部署到 Vercel 后会通过 /api/replicate/generate 服务端代理调用 Replicate。默认模型是 black-forest-labs/flux-schnell；生产环境推荐在 Vercel 设置 REPLICATE_API_TOKEN 环境变量。"
             />
           ) : null}
+          {watchedValues?.providerId === "bajie" ? (
+            <Alert
+              showIcon
+              type="info"
+              message="Bajie API 模式"
+              description="部署到 Vercel 后会通过 /api/bajie/generate 服务端代理调用 Bajie API。默认模型是 gpt-image-2；生产环境推荐在 Vercel 设置 BAJIE_API_KEY，必要时设置 BAJIE_BASE_URL。"
+            />
+          ) : null}
           <Button
             type="primary"
             size="large"

@@ -84,6 +84,17 @@ export async function seedInitialData(): Promise<void> {
         pricePerImage: 0.003
       },
       updatedAt: now
+    },
+    {
+      id: "bajie",
+      name: "Bajie GPT Image",
+      model: "gpt-image-2",
+      enabled: true,
+      browserCompatible: true,
+      pricing: {
+        pricePerImage: 0.08
+      },
+      updatedAt: now
     }
   ];
 

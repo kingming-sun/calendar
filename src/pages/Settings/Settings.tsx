@@ -77,6 +77,16 @@ export function Settings() {
                     <Typography.Text code>REPLICATE_API_TOKEN</Typography.Text>。
                   </Typography.Paragraph>
                 ) : null}
+                {provider.id === "bajie" ? (
+                  <Typography.Paragraph className="muted">
+                    Bajie API 使用 OpenAI 兼容图片接口。默认模型是{" "}
+                    <Typography.Text code>gpt-image-2</Typography.Text>；部署到
+                    Vercel 时推荐配置环境变量{" "}
+                    <Typography.Text code>BAJIE_API_KEY</Typography.Text>。
+                    如接口网关不是默认地址，可配置{" "}
+                    <Typography.Text code>BAJIE_BASE_URL</Typography.Text>。
+                  </Typography.Paragraph>
+                ) : null}
                 <Space size="large" align="start">
                   <Form.Item name="pricePerImage" label="单张价格">
                     <InputNumber min={0} step={0.001} />

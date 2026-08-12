@@ -4,6 +4,7 @@ import type {
   ImageProvider,
   ProviderRuntimeConfig
 } from "@/types";
+import { BajieProvider } from "./BajieProvider";
 import { FluxProvider } from "./FluxProvider";
 import { GeminiProvider } from "./GeminiProvider";
 import { MockProvider } from "./MockProvider";
@@ -17,7 +18,8 @@ export class ProviderManager {
       new MockProvider(),
       new FluxProvider(),
       new GeminiProvider(),
-      new ReplicateProvider()
+      new ReplicateProvider(),
+      new BajieProvider()
     ]
   ) {
     initialProviders.forEach((provider) => {
