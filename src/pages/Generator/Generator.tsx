@@ -66,13 +66,28 @@ export function Generator() {
   };
 
   const submit = async () => {
-    const values = await form.validateFields();
+    const rawValues = await form.validateFields();
+    const values = {
+      ...rawValues,
+      providerId: rawValues.providerId,
+      model: rawValues.model?.trim() || ""
+    };
     const unknownTokens = findUnknownPromptTokens(values.promptTemplate);
     const provider = providers.find((item) => item.id === values.providerId);
 
     if (unknownTokens.length > 0) {
       message.error(`Prompt 存在未知变量：${unknownTokens.join(", ")}`);
       return;
+    }
+
+    if (!provider) {
+      message.error(`服务商不存在：${values.providerId}`);
+      return;
+    }
+
+    if (!values.model) {
+      values.model = provider.model;
+      form.setFieldValue("model", provider.model);
     }
 
     if (!provider?.enabled || !provider.browserCompatible) {

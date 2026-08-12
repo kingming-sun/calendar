@@ -140,7 +140,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ loading: true, error: undefined });
     try {
       const batch = await batchEngine.createBatch(input);
-      await get().reload();
+      await get().loadBatch(batch.id);
       return batch;
     } catch (error) {
       const message = error instanceof Error ? error.message : "创建 Batch 失败";
@@ -178,7 +178,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         });
       })
       .finally(async () => {
-        await get().reload();
+        await get().loadBatch(batchId);
         set({ loading: false });
       });
   },
@@ -207,14 +207,20 @@ export const useAppStore = create<AppState>((set, get) => ({
         updatedAt: Date.now()
       });
 
-      const pendingJobs = await db.jobs
+      const unfinishedJobs = await db.jobs
         .where("batchId")
         .equals(batch.id)
-        .and((job) => job.status === JobStatus.PENDING)
+        .and(
+          (job) =>
+            job.status === JobStatus.PENDING ||
+            job.status === JobStatus.PROCESSING ||
+            job.status === JobStatus.DOWNLOADING ||
+            job.status === JobStatus.SAVING
+        )
         .toArray();
-      const hasPendingJobs = pendingJobs.length > 0;
+      const hasUnfinishedJobs = unfinishedJobs.length > 0;
 
-      if (!batchEngine.isRunning(batch.id) && hasPendingJobs) {
+      if (!batchEngine.isRunning(batch.id) && hasUnfinishedJobs) {
         const directory = get().selectedDirectory ?? (await getStoredDirectory(batch.id));
         if (!directory) {
           set({ error: "请先选择输出目录" });
@@ -242,12 +248,12 @@ export const useAppStore = create<AppState>((set, get) => ({
             });
           })
           .finally(async () => {
-            await get().reload();
+            await get().loadBatch(batch.id);
             set({ loading: false });
           });
       }
 
-      await get().reload();
+      await get().loadBatch(batch.id);
     }
   },
 

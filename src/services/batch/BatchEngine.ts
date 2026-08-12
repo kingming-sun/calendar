@@ -27,6 +27,8 @@ import { sleep } from "@/utils/retry";
 import { JobScheduler } from "./JobScheduler";
 import { retryManager } from "./RetryManager";
 
+const STALE_ACTIVE_JOB_MS = 10 * 60 * 1000;
+
 export class BatchEngine {
   private scheduler?: JobScheduler;
   private runningBatchId?: string;
@@ -161,6 +163,8 @@ export class BatchEngine {
       updatedAt: Date.now()
     });
 
+    await this.requeueStaleActiveJobs(batchId);
+
     const jobs = await db.jobs
       .where("batchId")
       .equals(batchId)
@@ -210,6 +214,31 @@ export class BatchEngine {
       });
 
     await this.recalculateProgress(batchId);
+  }
+
+  private async requeueStaleActiveJobs(batchId: string): Promise<void> {
+    const cutoff = Date.now() - STALE_ACTIVE_JOB_MS;
+
+    await db.jobs
+      .where("batchId")
+      .equals(batchId)
+      .and(
+        (job) =>
+          (job.status === JobStatus.PROCESSING ||
+            job.status === JobStatus.DOWNLOADING ||
+            job.status === JobStatus.SAVING) &&
+          (job.updatedAt ?? job.startedAt ?? 0) < cutoff
+      )
+      .modify({
+        status: JobStatus.PENDING,
+        error: {
+          code: "STALE_JOB_RECOVERED",
+          message: "任务长时间停留在执行状态，已自动恢复到等待队列",
+          retryable: true,
+          timestamp: Date.now()
+        },
+        updatedAt: Date.now()
+      });
   }
 
   private async runJob(
