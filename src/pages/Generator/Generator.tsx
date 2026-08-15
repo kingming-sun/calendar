@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   App,
   Alert,
@@ -28,6 +28,7 @@ const defaultPrompt =
 
 export function Generator() {
   const [form] = Form.useForm<BatchCreateInput>();
+  const [pendingLaunch, setPendingLaunch] = useState<BatchCreateInput | null>(null);
   const navigate = useNavigate();
   const { message } = App.useApp();
   const providers = useAppStore((state) => state.providers);
@@ -63,6 +64,12 @@ export function Generator() {
     } catch (error) {
       message.error(error instanceof Error ? error.message : "选择目录失败");
     }
+  };
+
+  const launchBatch = async (values: BatchCreateInput) => {
+    const batch = await createBatch(values);
+    await startBatch(batch.id);
+    navigate(`/batches/${batch.id}`);
   };
 
   const submit = async () => {
@@ -102,27 +109,28 @@ export function Generator() {
       return;
     }
 
-    const run = async () => {
-      const batch = await createBatch(values);
-      await startBatch(batch.id);
-      navigate(`/batches/${batch.id}`);
-    };
-
     if (totalImages >= 1000 || estimatedCost >= 10) {
-      Modal.confirm({
-        title: "确认启动大批量任务",
-        content: `将生成 ${totalImages} 张图片，预计成本 ${formatCurrency(
-          estimatedCost
-        )}，并发 ${values.concurrency}。`,
-        okText: "确认启动",
-        cancelText: "取消",
-        onOk: run
-      });
+      setPendingLaunch(values);
       return;
     }
 
-    await run();
+    await launchBatch(values);
   };
+
+  const pendingTotalImages = pendingLaunch
+    ? pendingLaunch.setCount * pendingLaunch.imagesPerSet
+    : 0;
+  const pendingProvider = providers.find(
+    (provider) => provider.id === pendingLaunch?.providerId
+  );
+  const pendingEstimatedCost = pendingLaunch
+    ? estimateImageCost(
+        pendingTotalImages,
+        pendingLaunch.width,
+        pendingLaunch.height,
+        pendingProvider?.pricing ?? {}
+      )
+    : 0;
 
   return (
     <div className="page-grid">
@@ -309,6 +317,30 @@ export function Generator() {
           ) : null}
         </Space>
       </Card>
+      <Modal
+        title="确认启动任务"
+        open={Boolean(pendingLaunch)}
+        okText="确认启动"
+        cancelText="取消"
+        onCancel={() => setPendingLaunch(null)}
+        onOk={async () => {
+          if (!pendingLaunch) {
+            return;
+          }
+
+          const values = pendingLaunch;
+          setPendingLaunch(null);
+          await launchBatch(values);
+        }}
+      >
+        <Typography.Paragraph>
+          将生成 {pendingTotalImages} 张图片，预计成本{" "}
+          {formatCurrency(pendingEstimatedCost)}，并发 {pendingLaunch?.concurrency}。
+        </Typography.Paragraph>
+        <Typography.Paragraph type="secondary">
+          Bajie gpt-image-2 按请求计费，默认 130 张会触发此确认，确认后才会创建批次。
+        </Typography.Paragraph>
+      </Modal>
     </div>
   );
 }
